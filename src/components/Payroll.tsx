@@ -1,33 +1,45 @@
 import React from 'react';
 import { gql, useQuery } from '@apollo/client';
+import { Container, Grid, Card, CardContent, Typography, CircularProgress } from '@mui/material';
 
-const GET_EMPLOYEE_PAYROLL = gql`
-  query GetEmployeePayroll($employeeId: String!) {
+const GET_PAYROLL = gql`
+  query GetPayroll($employeeId: String!) {
     getEmployeePayroll(employeeId: $employeeId) {
       salary
       bonus
-      fiscalYear
+      deductions
     }
   }
 `;
 
 const Payroll: React.FC = () => {
     const employeeId = localStorage.getItem('employeeId');
-
-    const { data, loading, error } = useQuery(GET_EMPLOYEE_PAYROLL, {
+    const { data, loading, error } = useQuery(GET_PAYROLL, {
         variables: { employeeId },
     });
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error fetching payroll data</p>;
+    if (loading) return <CircularProgress />;
+    if (error) return <Typography color="error">Error loading payroll data</Typography>;
 
     return (
-        <div className="payroll-component">
-            <h1>Payroll</h1>
-            <p>Salary: ₹{data.getEmployeePayroll.salary}</p>
-            <p>Bonus: ₹{data.getEmployeePayroll.bonus}</p>
-            <p>Fiscal Year: {data.getEmployeePayroll.fiscalYear}</p>
-        </div>
+        <Container maxWidth="lg" sx={{ mt: 5 }}>
+            <Typography variant="h4" gutterBottom>
+                Payroll Details
+            </Typography>
+            <Grid container spacing={4}>
+                {/* Payroll Card */}
+                <Grid item xs={12} md={6}>
+                    <Card>
+                        <CardContent>
+                            <Typography variant="h6">Payroll Summary</Typography>
+                            <Typography>Salary: ₹{data.getEmployeePayroll.salary}</Typography>
+                            <Typography>Bonus: ₹{data.getEmployeePayroll.bonus}</Typography>
+                            <Typography>Deductions: ₹{data.getEmployeePayroll.deductions}</Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+            </Grid>
+        </Container>
     );
 };
 

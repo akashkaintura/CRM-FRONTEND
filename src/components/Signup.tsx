@@ -3,30 +3,31 @@ import { useNavigate } from 'react-router-dom';
 import { gql, useMutation } from '@apollo/client';
 import { Container, TextField, Button, Typography, Box, Link } from '@mui/material';
 
-const LOGIN_MUTATION = gql`
-  mutation Login($email: String!, $password: String!) {
-    login(loginInput: { email: $email, password: $password }) {
+const SIGNUP_MUTATION = gql`
+  mutation Register($email: String!, $password: String!, $name: String!) {
+    register(registerInput: { email: $email, password: $password, name: $name }) {
       access_token
     }
   }
 `;
 
-const Login: React.FC = () => {
+const SignUp: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [login, { loading, error }] = useMutation(LOGIN_MUTATION);
+    const [name, setName] = useState('');
+    const [register, { loading, error }] = useMutation(SIGNUP_MUTATION);
     const navigate = useNavigate();
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const { data } = await login({
-                variables: { email, password },
+            const { data } = await register({
+                variables: { email, password, name },
             });
-            localStorage.setItem('token', data.login.access_token);
+            localStorage.setItem('token', data.register.access_token);
             navigate('/dashboard');
         } catch (err) {
-            console.error('Login failed', err);
+            console.error('Signup failed', err);
         }
     };
 
@@ -44,9 +45,22 @@ const Login: React.FC = () => {
                 }}
             >
                 <Typography component="h1" variant="h4" sx={{ mb: 4 }}>
-                    Sign In
+                    Create an Account
                 </Typography>
-                <form onSubmit={handleLogin} style={{ width: '100%' }}>
+                <form onSubmit={handleSignup} style={{ width: '100%' }}>
+                    <TextField
+                        variant="outlined"
+                        margin="normal"
+                        required
+                        fullWidth
+                        id="name"
+                        label="Full Name"
+                        name="name"
+                        autoComplete="name"
+                        autoFocus
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                    />
                     <TextField
                         variant="outlined"
                         margin="normal"
@@ -56,7 +70,6 @@ const Login: React.FC = () => {
                         label="Email Address"
                         name="email"
                         autoComplete="email"
-                        autoFocus
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
@@ -73,7 +86,7 @@ const Login: React.FC = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                    {error && <Typography color="error">Login failed, please try again.</Typography>}
+                    {error && <Typography color="error">Signup failed, please try again.</Typography>}
 
                     <Button
                         type="submit"
@@ -82,15 +95,15 @@ const Login: React.FC = () => {
                         sx={{ mt: 3, mb: 2 }}
                         disabled={loading}
                     >
-                        {loading ? 'Logging in...' : 'Sign In'}
+                        {loading ? 'Signing up...' : 'Sign Up'}
                     </Button>
                 </form>
-                <Link href="/signup" variant="body2" sx={{ mt: 2 }}>
-                    Don't have an account? Sign up
+                <Link href="/login" variant="body2" sx={{ mt: 2 }}>
+                    Already have an account? Sign in
                 </Link>
             </Box>
         </Container>
     );
 };
 
-export default Login;
+export default SignUp;

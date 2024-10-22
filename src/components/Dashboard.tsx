@@ -1,24 +1,6 @@
 import React from 'react';
 import { gql, useQuery } from '@apollo/client';
-
-// Define types for Payroll and Leave data
-interface Payroll {
-    salary: number;
-    bonus: number;
-}
-
-interface Leave {
-    status: string;
-    startDate: string;
-    endDate: string;
-}
-
-// Define the type for the GraphQL query result
-interface DashboardData {
-    getEmployeePayroll: Payroll;
-    getEmployeeLeaves: Leave[];
-}
-
+import { Container, Grid, Card, CardContent, Typography, CircularProgress } from '@mui/material';
 
 const GET_DASHBOARD_DATA = gql`
   query GetDashboardData($employeeId: String!) {
@@ -36,32 +18,51 @@ const GET_DASHBOARD_DATA = gql`
 
 const Dashboard: React.FC = () => {
     const employeeId = localStorage.getItem('employeeId');
-    const { data, loading, error } = useQuery<DashboardData>(GET_DASHBOARD_DATA, {
+    const { data, loading, error } = useQuery(GET_DASHBOARD_DATA, {
         variables: { employeeId },
     });
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error loading dashboard data</p>;
+    if (loading) return <CircularProgress />;
+    if (error) return <Typography color="error">Error loading dashboard data</Typography>;
 
     return (
-        <div className="dashboard-component">
-            <h1>Dashboard</h1>
-            <div className="dashboard-summary">
-                <h2>Payroll Summary</h2>
-                <p>Salary: ₹{data?.getEmployeePayroll.salary}</p>
-                <p>Bonus: ₹{data?.getEmployeePayroll.bonus}</p>
-            </div>
-            <div className="dashboard-leaves">
-                <h2>Recent Leave Requests</h2>
-                {data?.getEmployeeLeaves.map((leave: Leave) => (
-                    <div key={leave.startDate}>
-                        <p>Status: {leave.status}</p>
-                        <p>Start Date: {new Date(leave.startDate).toLocaleDateString()}</p>
-                        <p>End Date: {new Date(leave.endDate).toLocaleDateString()}</p>
-                    </div>
-                ))}
-            </div>
-        </div>
+        <Container maxWidth="lg" sx={{ mt: 5 }}>
+            <Typography variant="h4" gutterBottom>
+                Dashboard
+            </Typography>
+            <Grid container spacing={4}>
+                {/* Payroll Summary Card */}
+                <Grid item xs={12} md={6}>
+                    <Card>
+                        <CardContent>
+                            <Typography variant="h6">Payroll Summary</Typography>
+                            <Typography>Salary: ₹{data.getEmployeePayroll.salary}</Typography>
+                            <Typography>Bonus: ₹{data.getEmployeePayroll.bonus}</Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                {/* Leave Summary Card */}
+                <Grid item xs={12} md={6}>
+                    <Card>
+                        <CardContent>
+                            <Typography variant="h6">Leave Summary</Typography>
+                            {data.getEmployeeLeaves.map((leave: any) => (
+                                <div key={leave.startDate}>
+                                    <Typography>Status: {leave.status}</Typography>
+                                    <Typography>
+                                        Start Date: {new Date(leave.startDate).toLocaleDateString()}
+                                    </Typography>
+                                    <Typography>
+                                        End Date: {new Date(leave.endDate).toLocaleDateString()}
+                                    </Typography>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                </Grid>
+            </Grid>
+        </Container>
     );
 };
 

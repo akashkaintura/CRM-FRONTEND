@@ -1,17 +1,17 @@
 import React from 'react';
-import { Route, Redirect } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 
-const ProtectedRoute = ({ component: Component, ...rest }) => {
-    const isAuthenticated = !!localStorage.getItem('token');
+interface ProtectedRouteProps {
+    isAuthenticated: boolean;
+    redirectPath?: string;
+}
 
-    return (
-        <Route
-            {...rest}
-            render={(props) =>
-                isAuthenticated ? <Component {...props} /> : <Redirect to="/login" />
-            }
-        />
-    );
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAuthenticated, redirectPath = '/login' }) => {
+    if (!isAuthenticated) {
+        return <Navigate to={redirectPath} />;
+    }
+
+    return <Outlet />;  // Renders the nested route content
 };
 
 export default ProtectedRoute;
