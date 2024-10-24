@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import Login from './components/Login';
@@ -8,27 +8,27 @@ import ProtectedRoute from './components/ProtectedRoute';
 import SignUp from './components/Signup';
 
 const App: React.FC = () => {
-  const isAuthenticated = !!localStorage.getItem('token'); // Check if user is authenticated
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsAuthenticated(!!token);
+  }, []);
 
   return (
     <Router>
       <Routes>
-        {/* Redirect to dashboard or login depending on authentication */}
         <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
 
-        {/* Public Route for Login */}
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
         <Route path='/signup' element={<SignUp />} />
 
-        {/* Protected Routes */}
         <Route element={<ProtectedRoute isAuthenticated={isAuthenticated} />}>
           <Route path="/dashboard" element={<Dashboard />} />
-
           <Route path="/payroll" element={<Payroll />} />
           <Route path="/leaves" element={<Leaves />} />
         </Route>
 
-        {/* Catch-all for undefined routes */}
         <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
       </Routes>
     </Router>

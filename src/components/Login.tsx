@@ -4,27 +4,48 @@ import { gql, useMutation } from '@apollo/client';
 import { Container, TextField, Button, Typography, Box, Link } from '@mui/material';
 
 const LOGIN_MUTATION = gql`
-  mutation Login($email: String!, $password: String!) {
-    login(loginInput: { email: $email, password: $password }) {
+  mutation Login($loginDto: LoginDto!) {
+    login(loginDto: $loginDto) {
       access_token
     }
   }
 `;
 
-const Login: React.FC = () => {
+const Login: React.FC<{ setIsAuthenticated: (value: boolean) => void }> = ({ setIsAuthenticated }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [login, { loading, error }] = useMutation(LOGIN_MUTATION);
     const navigate = useNavigate();
 
+    // Handle the form submission
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             const { data } = await login({
-                variables: { email, password },
+                variables: {
+                    loginDto: {
+                        email,
+                        password
+                    }
+                },
             });
-            localStorage.setItem('token', data.login.access_token);
-            navigate('/dashboard');
+            console.log('Login response:', data);
+
+            // Save the token and navigate to the dashboard
+            // localStorage.setItem('token', data.login.access_token);
+            // localStorage.setItem('employeeId', data.login.employeeId);
+
+            if (data?.user?.login?.employeeId) {
+                localStorage.setItem('employeeId', data.login.user.employeeId);
+                localStorage.setItem('token', data.login.access_token);
+                navigate('/dashboard');
+                console.log('employeeId', data.login.user.employeeId)
+            } else {
+                console.error('Employee ID is missing from the login response');
+            }
+
+            // setIsAuthenticated(true);
+            // navigate('/dashboard');
         } catch (err) {
             console.error('Login failed', err);
         }

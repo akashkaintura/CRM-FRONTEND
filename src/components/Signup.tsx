@@ -1,31 +1,45 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gql, useMutation } from '@apollo/client';
-import { Container, TextField, Button, Typography, Box, Link } from '@mui/material';
+import { Container, TextField, Button, Typography, Box, Link, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
 
 const SIGNUP_MUTATION = gql`
-  mutation Register($email: String!, $password: String!, $name: String!) {
-    register(registerInput: { email: $email, password: $password, name: $name }) {
+ mutation Register($registerDto: RegisterDto!) {
+    register(registerDto: $registerDto) {
       access_token
     }
   }
 `;
 
-const SignUp: React.FC = () => {
+const Signup: React.FC = () => {
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [name, setName] = useState('');
+    const [role, setRole] = useState('EMPLOYEE');
     const [register, { loading, error }] = useMutation(SIGNUP_MUTATION);
     const navigate = useNavigate();
 
-    const handleSignup = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             const { data } = await register({
-                variables: { email, password, name },
+                variables: {
+                    registerDto: {
+                        name,
+                        email,
+                        password,
+                        role,
+                    },
+                },
             });
-            localStorage.setItem('token', data.register.access_token);
-            navigate('/dashboard');
+            if (data) {
+                localStorage.setItem('token', data.register.access_token);
+                localStorage.setItem('employeeId', data.register.employeeId);
+                console.log('Signed up successfully:', data);
+                navigate('/dashboard');
+            } else {
+                console.error('Employee ID is missing from signup response');
+            }
         } catch (err) {
             console.error('Signup failed', err);
         }
@@ -47,7 +61,7 @@ const SignUp: React.FC = () => {
                 <Typography component="h1" variant="h4" sx={{ mb: 4 }}>
                     Create an Account
                 </Typography>
-                <form onSubmit={handleSignup} style={{ width: '100%' }}>
+                <form onSubmit={handleSubmit} style={{ width: '100%' }}>
                     <TextField
                         variant="outlined"
                         margin="normal"
@@ -86,6 +100,23 @@ const SignUp: React.FC = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
+
+                    {/* Role Dropdown */}
+                    <FormControl fullWidth margin="normal">
+                        <InputLabel id="role-select-label">Role</InputLabel>
+                        <Select
+                            labelId="role-select-label"
+                            id="role-select"
+                            value={role}
+                            onChange={(e) => setRole(e.target.value)}
+                            label="Role"
+                        >
+                            <MenuItem value="EMPLOYEE">Employee</MenuItem>
+                            <MenuItem value="ADMIN">Admin</MenuItem>
+                            <MenuItem value="MANAGER">Manager</MenuItem>
+                        </Select>
+                    </FormControl>
+
                     {error && <Typography color="error">Signup failed, please try again.</Typography>}
 
                     <Button
@@ -106,4 +137,4 @@ const SignUp: React.FC = () => {
     );
 };
 
-export default SignUp;
+export default Signup;

@@ -2,6 +2,7 @@ import React from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { Container, Grid, Card, CardContent, Typography, CircularProgress } from '@mui/material';
 
+// Define the GraphQL query
 const GET_DASHBOARD_DATA = gql`
   query GetDashboardData($employeeId: String!) {
     getEmployeePayroll(employeeId: $employeeId) {
@@ -19,9 +20,13 @@ const GET_DASHBOARD_DATA = gql`
 const Dashboard: React.FC = () => {
     const employeeId = localStorage.getItem('employeeId');
     const { data, loading, error } = useQuery(GET_DASHBOARD_DATA, {
-        variables: { employeeId },
+        variables: { employeeId: employeeId || '' },
+        // skip: !employeeId,
     });
 
+    if (!employeeId) {
+        return <Typography color="error">Employee ID is not found. Please log in again.</Typography>;
+    }
     if (loading) return <CircularProgress />;
     if (error) return <Typography color="error">Error loading dashboard data</Typography>;
 
@@ -29,6 +34,7 @@ const Dashboard: React.FC = () => {
         <Container maxWidth="lg" sx={{ mt: 5 }}>
             <Typography variant="h4" gutterBottom>
                 Dashboard
+                <pre>{JSON.stringify(data, null, 2)}</pre>
             </Typography>
             <Grid container spacing={4}>
                 {/* Payroll Summary Card */}
@@ -36,8 +42,8 @@ const Dashboard: React.FC = () => {
                     <Card>
                         <CardContent>
                             <Typography variant="h6">Payroll Summary</Typography>
-                            <Typography>Salary: ₹{data.getEmployeePayroll.salary}</Typography>
-                            <Typography>Bonus: ₹{data.getEmployeePayroll.bonus}</Typography>
+                            <Typography>Salary: ₹{data?.getEmployeePayroll?.salary}</Typography>
+                            <Typography>Bonus: ₹{data?.getEmployeePayroll?.bonus}</Typography>
                         </CardContent>
                     </Card>
                 </Grid>
@@ -47,7 +53,7 @@ const Dashboard: React.FC = () => {
                     <Card>
                         <CardContent>
                             <Typography variant="h6">Leave Summary</Typography>
-                            {data.getEmployeeLeaves.map((leave: any) => (
+                            {data?.getEmployeeLeaves?.map((leave: any) => (
                                 <div key={leave.startDate}>
                                     <Typography>Status: {leave.status}</Typography>
                                     <Typography>
